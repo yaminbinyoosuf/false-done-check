@@ -288,3 +288,10 @@ def test_resolved_comment_is_not_rewritten_every_run(_env):
     main(gh, _env)
     main(gh, _env)
     assert sum(1 for m, _ in gh.calls if m == "PATCH") == 1
+
+
+def test_same_check_name_listed_once():
+    runs = [{"name": "test", "status": "completed", "conclusion": "failure", "html_url": "a"},
+            {"name": "test", "status": "completed", "conclusion": "failure", "html_url": "b"}]
+    out = check.evaluate_checks(runs, [], exclude_names=[], ignore_pattern=None, run_id=None)
+    assert [f["name"] for f in out["failed"]] == ["test"]

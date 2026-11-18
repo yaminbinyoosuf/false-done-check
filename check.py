@@ -261,7 +261,15 @@ def evaluate_checks(check_runs: list, statuses: list, *, exclude_names: Iterable
             pending.append(entry)
         else:
             passed.append(entry)
-    return {"failed": failed, "pending": pending, "passed": passed}
+    # The same job often runs twice on one commit (push and pull_request): list each name once.
+    def once(entries: list) -> list:
+        seen, out = set(), []
+        for e in entries:
+            if e["name"] not in seen:
+                seen.add(e["name"])
+                out.append(e)
+        return out
+    return {"failed": once(failed), "pending": once(pending), "passed": once(passed)}
 
 
 def _describe(conclusion: Optional[str]) -> str:
@@ -310,7 +318,7 @@ def mismatch_comment(claim: dict, failed: list, receipt: dict, sha: str) -> str:
         f"| Check | Conclusion |\n|---|---|\n{rows}\n\n"
         f"<details><summary>COGEXT receipt: <b>MISMATCH</b> ({signed})</summary>\n\n"
         f"```json\n{json.dumps(receipt, indent=2, ensure_ascii=False)}\n```\n</details>\n\n"
-        f"<sub>Posted by [false-done-check](https://github.com/yaminbinyoosuf/cogext-observe/tree/main/action). "
+        f"<sub>Posted by [false-done-check](https://github.com/yaminbinyoosuf/false-done-check). "
         f"This comment updates in place; it never posts twice.</sub>"
     )
 
@@ -320,7 +328,7 @@ def resolved_comment(sha: str, reason: str) -> str:
         f"{MARKER}\n"
         f"### ✅ Resolved: {reason}\n\n"
         f"Checked head commit `{sha[:7]}`. Verdict: **VERIFIED**.\n\n"
-        f"<sub>Posted by [false-done-check](https://github.com/yaminbinyoosuf/cogext-observe/tree/main/action).</sub>"
+        f"<sub>Posted by [false-done-check](https://github.com/yaminbinyoosuf/false-done-check).</sub>"
     )
 
 
