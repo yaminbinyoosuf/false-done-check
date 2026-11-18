@@ -1,0 +1,55 @@
+name: COGEXT False-Done Check
+description: Flags pull requests that say "all tests pass" while a CI check on the head commit failed, with a COGEXT receipt.
+author: COGEXT
+branding:
+  icon: check-circle
+  color: orange
+
+inputs:
+  github-token:
+    description: Token used to read checks and write the PR comment and commit status. The workflow's GITHUB_TOKEN is enough.
+    required: false
+    default: ${{ github.token }}
+  fail-on-mismatch:
+    description: Fail this job when a PR claims tests pass while a check failed.
+    required: false
+    default: "false"
+  include-bot-comments:
+    description: Also look for pass claims in the latest PR comments written by bots / coding agents.
+    required: false
+    default: "true"
+  check-name:
+    description: Name of the job that runs this Action, excluded from evaluation so it never judges itself.
+    required: false
+    default: false-done-check
+  ignore-checks:
+    description: Regex of check names that are not tests or builds (deploy previews, coverage bots). Empty string to evaluate every check.
+    required: false
+    default: "(?i)deploy|preview|vercel|netlify|codecov|coverage|\\bcla\\b|license/cla|labeler|stale"
+
+outputs:
+  verdict:
+    description: MISMATCH, VERIFIED, PENDING, UNVERIFIABLE or NO_CLAIM.
+    value: ${{ steps.check.outputs.verdict }}
+  pull-requests:
+    description: Comma-separated PR numbers that were evaluated.
+    value: ${{ steps.check.outputs.pull-requests }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install cogext-observe from PyPI
+      shell: bash
+      run: |
+        python3 -m venv "$RUNNER_TEMP/false-done-check-venv"
+        "$RUNNER_TEMP/false-done-check-venv/bin/pip" install --quiet --disable-pip-version-check "cogext-observe==0.1.8"
+    - name: Check pass claims against CI
+      id: check
+      shell: bash
+      env:
+        INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
+        INPUT_FAIL_ON_MISMATCH: ${{ inputs.fail-on-mismatch }}
+        INPUT_INCLUDE_BOT_COMMENTS: ${{ inputs.include-bot-comments }}
+        INPUT_CHECK_NAME: ${{ inputs.check-name }}
+        INPUT_IGNORE_CHECKS: ${{ inputs.ignore-checks }}
+      run: '"$RUNNER_TEMP/false-done-check-venv/bin/python" "$GITHUB_ACTION_PATH/check.py"'
