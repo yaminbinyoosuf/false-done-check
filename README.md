@@ -2,7 +2,7 @@
 
 Your coding agent's PR says "all tests pass". Does CI agree?
 
-AI coding agents (Claude Code, Cursor, Devin, Copilot and others) often run part of the test suite, see it pass, and write "tests pass" in the PR. CI then runs the rest and fails. Reviewers who read the description and not the checks merge broken changes. Across public agent PRs we check daily, about 1 in 25 PRs that claim tests pass had a failing test or build check, and more than half of those were merged anyway: [cogextai.com/honesty](https://cogextai.com/honesty).
+AI coding agents (Claude Code, Cursor, Devin, Copilot and others) often run part of the test suite, see it pass, and write "tests pass" in the PR. CI then runs the rest and fails. Reviewers who read the description and not the checks merge broken changes. Across public agent PRs we check daily, about 1 in 25 PRs that claim tests pass had a failing test or build check, and more than half of those were merged anyway. Every case is linked: [cogextai.com/honesty](https://cogextai.com/honesty). See your own repo's history in 15 seconds at [cogextai.com/check](https://cogextai.com/check).
 
 This Action reads the PR description (and recent comments by bots), finds pass claims ("all tests pass", "CI is green", "build succeeds", a ticked `- [x] Tests pass`), and compares them with the check runs and commit statuses of the PR's head commit.
 
@@ -60,6 +60,10 @@ jobs:
 Output `verdict`: `MISMATCH`, `VERIFIED`, `PENDING`, `UNVERIFIABLE` (claim, but no checks ran) or `NO_CLAIM`.
 
 Receipts come from [cogext-observe](https://pypi.org/project/cogext-observe/). They are unsigned unless you add a `COGEXT_RECEIPT_KEY` secret (32+ characters) and pass it as `env: COGEXT_RECEIPT_KEY: ${{ secrets.COGEXT_RECEIPT_KEY }}` on the step. Runs on Linux and macOS runners.
+
+## Using Claude Code?
+
+[Done Gate](https://github.com/yaminbinyoosuf/done-gate) catches the same thing earlier: it won't let Claude end its turn on "tests pass" unless the session shows a passing run after the last edit.
 
 ## Agents that act outside code
 
